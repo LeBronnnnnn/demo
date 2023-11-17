@@ -3,9 +3,9 @@ CXX=g++
 CFLAGS=-g -O2 -Wall -fPIC -Wno-deprecated
 #调试信息、优化编译、输出警告、构建库必选、兼容老版本库(不发出警告)
 
-SRC=./src  #源文件
+SRC=./src#源文件
 
-INC=-I./include  #头文件
+INC=-I./include#头文件
 
 #wildcard：展开SRC目录下所有.cpp文件
 #basename: 取文件名，不包括后缀.cpp   src/main.cpp  ->  src/main
@@ -35,5 +35,3 @@ $(TARGET): $(OBJS)#最终目标静态库，依赖所有.o文件
 clean:
 	-rm -f src/*.o $(TARGET)
 #-f:强制执行，及时文件不存在，也不会中断
-
-

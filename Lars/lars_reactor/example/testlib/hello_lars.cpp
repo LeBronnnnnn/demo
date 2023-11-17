@@ -1,6 +1,6 @@
 #include "tcp_server.h"
 
 int main(){
-    lars_hello();
+    //lars_hello();
     return 0;
 }
