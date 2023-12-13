@@ -1,0 +1,8 @@
+{
+    "server_file" : "server.go ",
+    "client_file" : "client.go ",
+    "server_exec_cmd" : "./23026237/server.go",
+    "client_exec_cmd" : "./23026237/client.go",
+    "generate_type" : "generate_random_char",
+    "size" : "0.5"
+}
