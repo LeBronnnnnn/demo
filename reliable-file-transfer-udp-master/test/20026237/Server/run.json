@@ -1,8 +1,0 @@
-{
-    "server_file" : "client.cpp ",
-    "client_file" : "server.cpp ",
-    "client_exec_cmd" : "../Client/client 172.20.208.14 12345 output.bin 4350",
-    "server_exec_cmd" : "./server 172.20.208.14 12345 4350",
-    "generate_type" : "generate_same_char",
-    "size" : "0.1"
-}
