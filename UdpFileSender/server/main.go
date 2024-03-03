@@ -2,10 +2,7 @@ package main
 
 import (
 	"UdpFileSender/common"
-	"crypto/md5"
 	"encoding/json"
-	"fmt"
-	"io"
 	"log"
 	"math"
 	"net"
@@ -16,8 +13,8 @@ func main() {
 	// 设置日志格式
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	// 监听UDP端口
-	addr, err := net.ResolveUDPAddr("udp", ":9991")
+	// 服务器监听UDP，本地主机的9991端口
+	addr, err := net.ResolveUDPAddr("udp", "192.168.11.3:9991")
 	if err != nil {
 		log.Fatalf("Error resolving UDP address: %v", err)
 	}
@@ -28,78 +25,71 @@ func main() {
 
 	for {
 		var buf = make([]byte, 1024)
-		// 读取客户端请求
+		// 读取客户端请求（读到的字节数、发送方地址、错误）
 		n, addr, err := conn.ReadFromUDP(buf[0:])
+		// 处理数据
 		go handleClient(n, addr, buf, err, conn)
 	}
 }
 
 func handleClient(n int, addr *net.UDPAddr, buf []byte, err error, conn *net.UDPConn) {
-	//	var buf [1024]byte
-
-	// 读取客户端请求
-	//	n, addr, err := conn.ReadFromUDP(buf[0:])
 	if err != nil {
 		log.Printf("Error reading from UDP connection: %v", err)
 		return
 	}
-	var fileReq common.FileRequest
-	err = json.Unmarshal(buf[0:n], &fileReq)
+	var fileReq common.FileRequest           //创建请求报文（保存请求数据）
+	err = json.Unmarshal(buf[0:n], &fileReq) //读到的请求数据，转化为json
 	if err != nil {
 		log.Printf("Error unmarshaling JSON request: %v", err)
 		return
 	}
 
-	// 读取文件内容
-	file, err := os.Open("bible.txt")
+	// 打开文件
+	file, err := os.Open("./output.bin")
 	if err != nil {
 		log.Printf("Error opening file: %v", err)
 		return
 	}
 	defer file.Close()
+	// 获取文件信息
 	fileInfo, err := file.Stat()
 	if err != nil {
 		log.Printf("Error getting file info: %v", err)
 		return
 	}
 	var fileResp common.FileResponse
-	var md5hash string
+	// 处理关于文件大小的请求
 	if fileReq.Start == math.MaxInt64 {
+		//生成响应报文（文件size）
 		fileResp = common.FileResponse{
 			Content: nil,
-			MD5Hash: "fileSize",
 			Start:   fileInfo.Size(),
 			End:     fileInfo.Size(),
 		}
-	} else {
+	} else { // 处理关于文件内容的请求
 		file.Seek(int64(fileReq.Start), 0)
+		// 相关文件内容保存到buff中
 		content := make([]byte, fileReq.End-fileReq.Start)
 		_, err := file.Read(content)
 		if err != nil {
 			log.Printf("Error reading file content from(%d) - to(%d): %v", fileReq.Start, fileReq.End, err)
 			return
 		}
-		// 计算MD5
-		hasher := md5.New()
-		io.WriteString(hasher, string(content))
-		md5hash = fmt.Sprintf("%x", hasher.Sum(nil))
-		// 发送响应
+		// 生成响应报文（文件内容）
 		fileResp = common.FileResponse{
 			Content: content,
-			MD5Hash: md5hash,
 			Start:   fileReq.Start,
 			End:     fileReq.End,
 		}
 	}
-	resp, err := json.Marshal(fileResp)
+	resp, err := json.Marshal(fileResp) // 响应报文转为json
 	if err != nil {
 		log.Printf("Error marshaling JSON response: %v", err)
 		return
 	}
-	_, err = conn.WriteToUDP(resp, addr)
+	_, err = conn.WriteToUDP(resp, addr) // 发送响应
 	if err != nil {
 		log.Printf("Error writing response to UDP connection: %v", err)
 		return
 	}
-	log.Printf("Sent response to %s:%d, MD5: %s, Start: %d, End: %d", addr.IP, addr.Port, md5hash, fileReq.Start, fileReq.End)
 }

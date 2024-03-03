@@ -11,5 +11,4 @@ type FileResponse struct {
 	Content []byte `json:"content"`
 	Start   int64  `json:"start"`
 	End     int64  `json:"end"`
-	MD5Hash string `json:"md5hash"`
 }
